@@ -1,0 +1,43 @@
+.wrapper{
+    position: absolute;
+    top:100px;
+    /*visibility: hidden;*/
+    right: 400px;
+    margin-bottom: 70px;
+}
+
+.card{
+    margin-bottom: 70px;
+    min-width:30vw;
+    padding:0 !important;
+}
+
+.fa-plus{
+    font-size:1.5rem;
+}
+
+#add-field-row{
+    padding:0 10px;
+    box-sizing:border-box;
+    margin:8px 0;
+}
+
+#add-field-button{
+    cursor:pointer;
+    display:flex;
+    justify-content:space-around;
+    padding:6px;
+}
+
+#add-field-button:hover{
+    background-color:#ccc;
+}
+
+.field{
+    display:flex;
+    justify-content:space-between;
+}
+
+.field-input{
+    margin: 0 5px 5px 5px;
+}

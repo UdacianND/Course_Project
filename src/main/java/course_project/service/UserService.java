@@ -1,13 +1,16 @@
 package course_project.service;
 
 import course_project.base_service.UserBaseService;
-import course_project.entity.Role;
-import course_project.entity.User;
-import course_project.entity.UserStatus;
+import course_project.entity.user.Role;
+import course_project.entity.user.User;
+import course_project.entity.user.UserStatus;
 import course_project.payload.request.UserRoleDto;
+import course_project.payload.request.UserSignUpDto;
 import course_project.payload.response.UserDto;
 import course_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
@@ -15,10 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static course_project.entity.UserStatus.ACTIVE;
-import static course_project.entity.UserStatus.BLOCKED;
+import static course_project.entity.user.Role.USER;
+import static course_project.entity.user.UserStatus.ACTIVE;
+import static course_project.entity.user.UserStatus.BLOCKED;
 import static course_project.utils.SessionManager.getSessionByUsername;
 import static course_project.utils.SessionManager.removeSession;
+import static course_project.utils.StatusCode.EXISTS_BY_EMAIL;
+import static course_project.utils.StatusCode.EXISTS_BY_USERNAME;
 
 
 @RequiredArgsConstructor
@@ -26,6 +32,7 @@ import static course_project.utils.SessionManager.removeSession;
 public class UserService implements UserBaseService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<UserDto> getUserList() {
@@ -75,6 +82,29 @@ public class UserService implements UserBaseService {
         User user = getUserById(userId);
         user.setRole(role);
         invalidateUserSession(userId);
+        userRepository.save(user);
+    }
+
+    @Override
+    public int registerUser(UserSignUpDto user) {
+        boolean existsByUsername = userRepository.existsByUsername(user.getUsername());
+        if(existsByUsername)
+            return EXISTS_BY_USERNAME;
+
+        boolean existsByEmail = userRepository.existsByEmail(user.getEmail());
+        if (existsByEmail)
+            return EXISTS_BY_EMAIL;
+
+        saveUser(user);
+        return HttpStatus.OK.value();
+    }
+    private void saveUser(UserSignUpDto userDto){
+        User user = new User(
+                userDto.getUsername(),
+                userDto.getEmail(),
+                passwordEncoder.encode(userDto.getPassword()),
+                USER
+        );
         userRepository.save(user);
     }
 

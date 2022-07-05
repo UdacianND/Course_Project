@@ -37,7 +37,7 @@ $(document).ready(function(){
             data: JSON.stringify(selected),
             async:false
         }).done(function(){
-            window.location.href = '/'
+            location.reload()
         })
 
     }

@@ -1,12 +1,9 @@
 package course_project.payload.response;
 
-import course_project.entity.Role;
-import course_project.entity.UserStatus;
+import course_project.entity.user.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.sql.Date;
 
 @Data
 @AllArgsConstructor

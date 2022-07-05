@@ -1,6 +1,6 @@
 package course_project.utils;
 
-import course_project.entity.User;
+import course_project.entity.user.User;
 import course_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
