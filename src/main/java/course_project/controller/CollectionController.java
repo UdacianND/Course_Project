@@ -1,17 +1,18 @@
 package course_project.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import course_project.payload.response.CollectionDto;
 import course_project.service.CollectionService;
 import course_project.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.lang.Nullable;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/collections")
@@ -26,9 +27,9 @@ public class CollectionController {
     public HttpEntity<?> newCollection(
             @RequestParam String name,
             @RequestParam String topic,
-            @RequestParam MultipartFile image,
+            @RequestParam @Nullable MultipartFile image,
             @RequestParam String description,
-            @RequestParam String fields
+            @RequestParam @Nullable String fields
     ){
         try{
             collectionService.addCollection(name, topic, image, description, fields);
@@ -38,4 +39,13 @@ public class CollectionController {
         }
     }
 
+    @GetMapping("my-collections")
+    public ResponseEntity<?> getMyCollections(){
+        try {
+            String data = collectionService.getUserCollections();
+            return ResponseEntity.ok().body(data);
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 }

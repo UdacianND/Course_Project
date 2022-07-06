@@ -1,10 +1,11 @@
 package course_project.jwt;
 
+import course_project.entity.user.User;
+import course_project.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.lang.Strings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,24 +21,23 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class JwtTokenVerifier extends OncePerRequestFilter {
 
     @Value("${jwtSecretKey}")
-    private final String jwtSecretKey;
+    private String jwtSecretKey;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String authToken = request.getHeader("Authorization");
 
-        if (!authToken.startsWith("Bearer ")) {
+        if (authToken == null || !authToken.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -54,16 +54,19 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
 
             String email = body.getSubject();
 
-            String password = (String) body.get("password");
             String role = (String) body.get("role");
 
             Set<SimpleGrantedAuthority> authorities = new HashSet<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_"+role));
+            Optional<User> optionalUser = userRepository.findByEmail(email);
+            if(optionalUser.isEmpty())
+                throw new IllegalStateException("user not found");
+            User user = optionalUser.get();
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    email,
-                    password,
-                    authorities
+                    user,
+                    null,
+                    user.getAuthorities()
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);

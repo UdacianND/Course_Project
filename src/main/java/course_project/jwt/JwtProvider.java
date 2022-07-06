@@ -42,7 +42,6 @@ public class JwtProvider {
             User principal = (User) authenticate.getPrincipal();
             String token = Jwts.builder()
                     .setSubject(principal.getEmail())
-                    .claim("password", principal.getPassword())
                     .claim("role", principal.getRole().toString())
                     .setIssuedAt(new Date())
                     .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))

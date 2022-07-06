@@ -1,5 +1,6 @@
 package course_project.entity;
 
+import course_project.entity.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,5 +23,7 @@ public class Collection {
     @ManyToOne
     private Topic topic;
     private String imageUrl;
+    @ManyToOne
+    private User user;
 }
 

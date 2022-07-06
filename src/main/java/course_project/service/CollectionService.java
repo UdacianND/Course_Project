@@ -6,17 +6,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import course_project.entity.Collection;
 import course_project.entity.Topic;
 import course_project.entity.field.Field;
+import course_project.entity.user.User;
 import course_project.payload.request.CollectionFieldDto;
+import course_project.payload.response.CollectionDto;
 import course_project.repository.CollectionRepository;
 import course_project.repository.FieldRepository;
 import course_project.repository.TopicRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,12 +38,14 @@ public class CollectionService {
             String fields
     ) throws JsonProcessingException {
         String url = cloudinaryService.uploadFile(image);
+
         Collection collection = new Collection(
                 null,
                 name,
                 description,
                 getTopic(topic),
-                url
+                url,
+                getPrincipal()
         );
         Collection savedCollection = collectionRepository.save(collection);
         saveFields(savedCollection, fields);
@@ -62,5 +65,23 @@ public class CollectionService {
             Field field = new Field(fieldDto, collection);
             fieldRepository.save(field);
         }
+    }
+
+    private User getPrincipal(){
+        return (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    public String getUserCollections() throws JsonProcessingException {
+        List<Collection> collections = collectionRepository.findAllByUserId(getPrincipal().getId());
+        List<CollectionDto> collectionDtoList = new ArrayList<>();
+        for (Collection collection: collections){
+            collectionDtoList.add( new CollectionDto(
+                            collection.getId(),
+                            collection.getName(),
+                            collection.getDescription(),
+                            collection.getImageUrl()));
+        }
+        String data = objectMapper.writeValueAsString(collections);
+        return data;
     }
 }
