@@ -2,10 +2,8 @@ package course_project.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import course_project.base_service.UserBaseService;
-import course_project.payload.request.UserRoleDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 

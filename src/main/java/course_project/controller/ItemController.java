@@ -35,7 +35,7 @@ public class ItemController {
     }
 
     @GetMapping("public/tags/{name}")
-    public ResponseEntity<?> getTags(@PathVariable @Nullable String name) throws JsonProcessingException {
+    public ResponseEntity<?> getTags(@PathVariable @Nullable String name) {
         try {
             return ResponseEntity.ok(itemService.getTagsByName(name));
         }catch (Exception e){

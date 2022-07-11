@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.jboss.logging.annotations.Field;
-import org.jboss.logging.annotations.Fields;
 
 import javax.persistence.*;
 import java.util.List;
@@ -29,8 +27,4 @@ public class Tag {
     private String name;
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "tags")
     List<Item> items;
-
-    public Tag(String name) {
-        this.name = name;
-    }
 }

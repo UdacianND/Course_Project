@@ -9,7 +9,6 @@ import course_project.entity.user.User;
 import course_project.entity.user.UserStatus;
 import course_project.payload.request.UserRoleDto;
 import course_project.payload.request.UserSignUpDto;
-import course_project.payload.request.ValueDto;
 import course_project.payload.response.UserDto;
 import course_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-import static course_project.entity.user.Role.*;
+import static course_project.entity.user.Role.USER;
 import static course_project.entity.user.UserStatus.*;
 import static course_project.utils.StatusCode.EXISTS_BY_EMAIL;
 import static course_project.utils.StatusCode.EXISTS_BY_USERNAME;

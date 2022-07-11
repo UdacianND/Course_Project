@@ -5,15 +5,12 @@ import course_project.base_service.UserBaseService;
 import course_project.jwt.JwtProvider;
 import course_project.payload.request.UserLoginDto;
 import course_project.payload.request.UserSignUpDto;
-import course_project.payload.response.UserDto;
-import course_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController

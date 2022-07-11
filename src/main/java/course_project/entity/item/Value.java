@@ -1,14 +1,11 @@
 package course_project.entity.item;
 
-import course_project.entity.Collection;
-import course_project.entity.Tag;
 import course_project.entity.field.Field;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.springframework.stereotype.Indexed;
 
 import javax.persistence.*;
 

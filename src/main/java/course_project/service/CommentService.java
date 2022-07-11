@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import course_project.entity.Comment;
 import course_project.entity.item.Item;
 import course_project.entity.user.User;
-import course_project.payload.request.ValueDto;
 import course_project.payload.response.CommentDto;
 import course_project.repository.CommentRepository;
 import course_project.repository.ItemRepository;
