@@ -13,7 +13,7 @@ public class CORSFilter implements Filter {
 
     // This is to be replaced with a list of domains allowed to access the server
   //You can include more than one origin here
-    private final List<String> allowedOrigins = List.of("http://localhost:3000");
+    private final List<String> allowedOrigins = List.of("https://itransition-course-work.herokuapp.com");
 
     public void destroy() {
 
