@@ -14,9 +14,14 @@ import course_project.entity.user.User;
 import course_project.payload.request.ValueDto;
 import course_project.payload.response.ItemDto;
 import course_project.payload.response.ItemInfoDto;
+import course_project.payload.response.ItemsPage;
 import course_project.repository.*;
 import lombok.AllArgsConstructor;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.search.engine.search.query.SearchResult;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.session.SearchSession;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -111,14 +116,17 @@ public class ItemService {
     public String convertItemsToString(List<Item> items) throws JsonProcessingException {
         List<ItemDto> itemDtoList = new ArrayList<>();
         for (Item item:items){
-            itemDtoList.add(new ItemDto(
-                    item.getId(),
-                    item.getName(),
-                    getTagsAsString(item.getTags()),
-                    item.getImageUrl()
-            ));
+            itemDtoList.add(getItemDto(item));
         }
         return objectMapper.writeValueAsString(itemDtoList);
+    }
+
+    public ItemDto getItemDto(Item item){
+        return new ItemDto(
+                item.getId(),
+                item.getName(),
+                getTagsAsString(item.getTags()),
+                item.getImageUrl());
     }
 
     private String getTagsAsString(List<Tag> tags) {
@@ -236,5 +244,48 @@ public class ItemService {
         Item item = itemRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException(id,"Item"));
         Optional<ItemLike> optionalItemLike = itemLikeRepository.findByItem_IdAndUser_Id(item.getId(), principal.getId());
         return optionalItemLike.isPresent();
+    }
+
+    public String getItemsByPage(Integer page, String searchString) throws JsonProcessingException {
+        ItemsPage itemsPage;
+        if(searchString == null)
+            itemsPage = getItems(page);
+        else
+            itemsPage = searchItems(page, searchString);
+        return objectMapper.writeValueAsString(itemsPage);
+    }
+
+    public ItemsPage getItems(Integer page){
+        Pageable itemPage = PageRequest.of(page, 6, Sort.by("id").descending());
+        Slice<Item> items = itemRepository.findAll(itemPage);
+        boolean hasNext = items.hasNext();
+        List<ItemDto> itemDtoList = new ArrayList<>();
+        for(Item item:items){
+            itemDtoList.add(getItemDto(item));
+        }
+        return new ItemsPage(itemDtoList, hasNext);
+    }
+
+    public ItemsPage searchItems(Integer page, String searchString){
+        SearchSession searchSession = Search.session( entityManager );
+        int offset = page*6;
+        SearchResult<Item> result = searchSession.search( Item.class )
+                .where( f -> f.match()
+                        .fields( "name", "tags.name" ,"comments.content","values.value","collection.name")
+                        .matching( searchString ) )
+                .fetch( offset, 6 );
+
+        long totalHitCount = result.total().hitCount();
+        List<Item> items = result.hits();
+        boolean hasNext = (offset + 6) < totalHitCount;
+        return new ItemsPage(getItemDtoList(items), hasNext);
+    }
+
+    List<ItemDto> getItemDtoList(List<Item> items){
+        List<ItemDto> itemDtoList = new ArrayList<>();
+        for(Item item:items){
+            itemDtoList.add(getItemDto(item));
+        }
+        return itemDtoList;
     }
 }
