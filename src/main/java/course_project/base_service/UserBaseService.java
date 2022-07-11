@@ -1,17 +1,14 @@
 package course_project.base_service;
 
 
-import course_project.payload.request.UserRoleDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import course_project.payload.request.UserSignUpDto;
-import course_project.payload.response.UserDto;
-
-import java.util.List;
 
 public interface UserBaseService {
-    List<UserDto> getUserList();
+    String getUserList() throws JsonProcessingException;
     void deleteAllById(Long[] id);
     void blockAllById(Long[] id);
     void unblockAllById(Long[] userIds);
-    void setUserRole(UserRoleDto user);
+    void setUserRole(String user) throws JsonProcessingException;
     int registerUser(UserSignUpDto user);
 }

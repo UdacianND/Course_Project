@@ -5,6 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.jboss.logging.annotations.Field;
+import org.jboss.logging.annotations.Fields;
 
 import javax.persistence.*;
 import java.util.List;
@@ -14,12 +18,19 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
+@Indexed
+
 public class Tag {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+    @FullTextField(analyzer = "customAnalyzer" )
     private String name;
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "tags")
     List<Item> items;
+
+    public Tag(String name) {
+        this.name = name;
+    }
 }

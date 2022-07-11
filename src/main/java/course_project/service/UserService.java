@@ -1,28 +1,28 @@
 package course_project.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import course_project.base_service.UserBaseService;
 import course_project.entity.user.Role;
 import course_project.entity.user.User;
 import course_project.entity.user.UserStatus;
 import course_project.payload.request.UserRoleDto;
 import course_project.payload.request.UserSignUpDto;
+import course_project.payload.request.ValueDto;
 import course_project.payload.response.UserDto;
 import course_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import static course_project.entity.user.Role.USER;
-import static course_project.entity.user.UserStatus.ACTIVE;
-import static course_project.entity.user.UserStatus.BLOCKED;
-import static course_project.utils.SessionManager.getSessionByUsername;
-import static course_project.utils.SessionManager.removeSession;
+import static course_project.entity.user.Role.*;
+import static course_project.entity.user.UserStatus.*;
 import static course_project.utils.StatusCode.EXISTS_BY_EMAIL;
 import static course_project.utils.StatusCode.EXISTS_BY_USERNAME;
 
@@ -33,31 +33,26 @@ public class UserService implements UserBaseService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ObjectMapper objectMapper;
 
     @Override
-    public List<UserDto> getUserList() {
-        List<User> userList = userRepository.findAll();
+    public String getUserList() throws JsonProcessingException {
+        List<User> userList = userRepository.getUserList();
         List<UserDto> userDtoList = new ArrayList<>();
         for (User user: userList){
-            userDtoList.add(
-                    new UserDto(
+            userDtoList.add(new UserDto(
                             user.getId(),
                             user.getUsername(),
                             user.getEmail(),
-                            user.getPassword(),
                             user.getStatus(),
-                            user.getRole().name()
-                    )
-            );
-        }
-        return userDtoList;
+                            user.getRole().name()));}
+        return objectMapper.writeValueAsString(userDtoList);
     }
 
     @Override
     public void deleteAllById(Long[] userIds) {
         for (Long id: userIds) {
-            invalidateUserSession(id);
-            userRepository.deleteById(id);
+            setUserStatus(id, DELETED);
         }
     }
 
@@ -65,7 +60,6 @@ public class UserService implements UserBaseService {
     public void blockAllById(Long[] userIds) {
         for (Long id : userIds){
             setUserStatus(id, BLOCKED);
-            invalidateUserSession(id);
         }
     }
 
@@ -76,12 +70,12 @@ public class UserService implements UserBaseService {
     }
 
     @Override
-    public void setUserRole(UserRoleDto userRoleDto) {
-        Long userId = userRoleDto.getId();
+    public void setUserRole(String userData) throws JsonProcessingException {
+        UserRoleDto userRoleDto =  objectMapper.readValue(userData, new TypeReference<>() {});
+        Long userId = userRoleDto.getUserId();
         Role role = Role.valueOf(userRoleDto.getRole());
-        User user = getUserById(userId);
+        User user = userRepository.findById(userId).orElseThrow(()-> new ObjectNotFoundException(userId,"User"));
         user.setRole(role);
-        invalidateUserSession(userId);
         userRepository.save(user);
     }
 
@@ -109,24 +103,8 @@ public class UserService implements UserBaseService {
     }
 
     public void setUserStatus(Long id, UserStatus status) {
-            User user = getUserById(id);
+            User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id,"User"));
             user.setStatus(status);
             userRepository.save(user);
-    }
-
-    private User getUserById(Long id) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if(optionalUser.isEmpty())
-            throw new RuntimeException("User not found with id - "+id);
-        return optionalUser.get();
-    }
-
-    private void invalidateUserSession(Long userId){
-        String username = getUserById(userId).getUsername();
-        HttpSession session = getSessionByUsername(username) ;
-        if(session != null){
-            session.invalidate();
-            removeSession(username);
-        }
     }
 }

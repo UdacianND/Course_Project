@@ -1,5 +1,5 @@
 package course_project.entity.user;
 
 public enum UserStatus {
-    ACTIVE, BLOCKED
+    ACTIVE, BLOCKED, DELETED
 }

@@ -7,7 +7,9 @@ import lombok.Data;
 @AllArgsConstructor
 public class CollectionDto {
     private Long id;
+    private Long ownerId;
     private String name;
+    private String topic;
     private String description;
     private String imageUrl;
 }

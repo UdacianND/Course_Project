@@ -20,15 +20,8 @@ import java.util.List;
 @RequestMapping("/api/auth")
 public class UserAuthController {
 
-    private final UserRepository userRepository;
     private final UserBaseService userBaseService;
     private final JwtProvider jwtProvider;
-
-    @GetMapping("/main")
-    public String mainPage(){
-        List<UserDto> userList = userBaseService.getUserList();
-        return "Hello";
-    }
 
     @PostMapping("register")
     public ResponseEntity<?> signUp(
@@ -39,7 +32,6 @@ public class UserAuthController {
     }
 
     @PostMapping("login")
-//    @RequestMapping(value = "login", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> login(
             @RequestBody UserLoginDto userDto
             ){

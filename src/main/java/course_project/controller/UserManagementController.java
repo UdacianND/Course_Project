@@ -1,44 +1,67 @@
 package course_project.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import course_project.base_service.UserBaseService;
 import course_project.payload.request.UserRoleDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user/management")
+@RequestMapping("api/user/management")
 public class UserManagementController {
 
     private final UserBaseService userBaseService;
 
+
+    @GetMapping("allUsers")
+    public ResponseEntity<?> getAllUsers(){
+        try {
+            String userList = userBaseService.getUserList();
+            return ResponseEntity.ok(userList);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
     @PostMapping("/delete")
-    public void delete(
+    public ResponseEntity<?> delete(
             @RequestBody Long[] userIds
     ){
         userBaseService.deleteAllById(userIds);
+        return ResponseEntity.ok().body(null);
     }
 
     @PostMapping("/block")
-    public void block(
+    public ResponseEntity<?> block(
             @RequestBody Long[] userIds
     )  {
         userBaseService.blockAllById(userIds);
+        return ResponseEntity.ok().body(null);
     }
 
     @PostMapping("/unblock")
-    public void unblock(
+    public ResponseEntity<?> unblock(
             @RequestBody Long[] userIds
     ){
         userBaseService.unblockAllById(userIds);
+        return ResponseEntity.ok().body(null);
     }
 
-    @PostMapping("/user-role")
-    public void setUserRole(
-            @RequestBody UserRoleDto userRoleDto
+    @PostMapping("/userRole")
+    public ResponseEntity<?> setUserRole(
+            @RequestBody String userData
     ){
-        userBaseService.setUserRole(userRoleDto);
+        try {
+            userBaseService.setUserRole(userData);
+            return ResponseEntity.ok().body(null);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
     }
 }

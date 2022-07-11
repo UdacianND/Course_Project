@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.springframework.stereotype.Indexed;
 
 import javax.persistence.*;
 
@@ -15,14 +17,17 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Getter
 @Setter
+
 public class Value {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
     @ManyToOne
+    @JoinColumn(name = "item_id")
     private Item item;
     @ManyToOne
     private Field field;
+    @FullTextField(analyzer = "customAnalyzer")
     private String value;
 }

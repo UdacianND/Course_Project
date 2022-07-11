@@ -1,16 +1,22 @@
 package course_project.entity.item;
 
 import course_project.entity.Collection;
+import course_project.entity.Comment;
 import course_project.entity.Tag;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
+@Indexed
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -20,15 +26,30 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
-    @ManyToOne
-    private Collection collection;
+    @FullTextField(analyzer = "customAnalyzer")
     private String name;
+    private String imageUrl;
+
+
+    @ManyToOne
+    @IndexedEmbedded
+    private Collection collection;
     @ManyToMany
-    @JoinTable(
-            name = "item_tags",
-            joinColumns = @JoinColumn(name = "item_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    @IndexedEmbedded
     private List<Tag> tags;
 
+    public Item(String name, String imageUrl, Collection collection, List<Tag> tags) {
+        this.name = name;
+        this.imageUrl = imageUrl;
+        this.collection = collection;
+        this.tags = tags;
+    }
+
+    @IndexedEmbedded
+    @OneToMany(mappedBy = "item")
+    private List<Comment> comments;
+    @IndexedEmbedded
+    @OneToMany(mappedBy = "item")
+    private List<Value> values;
 
 }

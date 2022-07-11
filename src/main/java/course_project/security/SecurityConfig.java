@@ -18,6 +18,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -32,8 +35,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/auth/**","/api/public/**")
+                .antMatchers("/api/auth/**","/**/public/**")
                 .permitAll()
+                .antMatchers("/comment","/comment/**").permitAll()
                 .antMatchers("/api/user/management/**")
                 .hasRole("ADMIN")
                 .anyRequest()
@@ -52,7 +56,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", new CorsConfiguration().applyPermitDefaultValues());
+        final CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("*");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.applyPermitDefaultValues();
+        source.registerCorsConfiguration("/**", configuration);
+        configuration.setExposedHeaders(List.of("Authorization"));
         return source;
     }
 

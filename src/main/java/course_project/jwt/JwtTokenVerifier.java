@@ -1,6 +1,8 @@
 package course_project.jwt;
 
 import course_project.entity.user.User;
+import course_project.entity.user.UserStatus;
+import course_project.exception.InvalidTokenException;
 import course_project.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -8,6 +10,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,6 +26,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+
+import static course_project.entity.user.UserStatus.ACTIVE;
 
 @Component
 @RequiredArgsConstructor
@@ -56,12 +61,17 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
 
             String role = (String) body.get("role");
 
-            Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_"+role));
             Optional<User> optionalUser = userRepository.findByEmail(email);
+
             if(optionalUser.isEmpty())
                 throw new IllegalStateException("user not found");
+
             User user = optionalUser.get();
+            boolean isInvalidToken = (user.getStatus() != ACTIVE) ||
+                    (!user.getRole().toString().equals(role));
+
+            if(isInvalidToken)
+                throw new InvalidTokenException("token "+ authToken +" is not valid");
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     user,
@@ -71,8 +81,8 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        } catch (JwtException e) {
-            throw new IllegalStateException(String.format("Token %s cannot be trusted", token));
+        }catch(Exception e){
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
         }
 
         filterChain.doFilter(request, response);
