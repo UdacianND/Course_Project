@@ -138,4 +138,15 @@ public class ItemController {
             return ResponseEntity.badRequest().body(null);
         }
     }
+
+    @GetMapping("public/topTags")
+    public ResponseEntity<?> getTopTags(){
+        try {
+            String data = itemService.getTopTags();
+            return ResponseEntity.ok(data);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 }

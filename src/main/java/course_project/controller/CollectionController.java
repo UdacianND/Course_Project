@@ -111,4 +111,15 @@ public class CollectionController {
         }
     }
 
+    @GetMapping("public/topCollections")
+    public ResponseEntity<?> getTopCollections(){
+        try {
+            String data = collectionService.topCollections();
+            return ResponseEntity.ok().body(data);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
 }

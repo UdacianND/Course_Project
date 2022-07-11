@@ -14,6 +14,8 @@ import course_project.repository.CollectionRepository;
 import course_project.repository.FieldRepository;
 import course_project.repository.TopicRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -127,14 +129,18 @@ public class CollectionService {
 
     public String getCollectionInfo(Long collectionId) throws JsonProcessingException {
         Collection collection = getCollection(collectionId);
-        CollectionDto collectionDto = new CollectionDto(
+        CollectionDto collectionDto = getCollectionDto(collection);
+        return objectMapper.writeValueAsString(collectionDto);
+    }
+
+    public CollectionDto getCollectionDto(Collection collection){
+        return new CollectionDto(
                 collection.getId(),
                 collection.getUser().getId(),
                 collection.getName(),
                 collection.getTopic().getName(),
                 collection.getDescription(),
                 collection.getImageUrl());
-        return objectMapper.writeValueAsString(collectionDto);
     }
 
     public String getTopics(String name) throws JsonProcessingException {
@@ -161,5 +167,14 @@ public class CollectionService {
     public void deleteCollection(Collection collection){
         fieldRepository.deleteAllByCollection_Id(collection.getId());
         collectionRepository.delete(collection);
+    }
+
+    public String topCollections() throws JsonProcessingException {
+        Pageable limit = PageRequest.of(0, 5);
+        List<Collection> collections = collectionRepository.gelTopCollections(limit);
+        List<CollectionDto> collectionDtoList = new ArrayList<>();
+        for(Collection collection : collections)
+            collectionDtoList.add(getCollectionDto(collection));
+        return objectMapper.writeValueAsString(collectionDtoList);
     }
 }

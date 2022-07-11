@@ -288,4 +288,10 @@ public class ItemService {
         }
         return itemDtoList;
     }
+
+    public String getTopTags() throws JsonProcessingException {
+        Pageable limit = PageRequest.of(0, 6);
+        List<String> tags = tagRepository.getTopTags(limit);
+        return objectMapper.writeValueAsString(tags);
+    }
 }
