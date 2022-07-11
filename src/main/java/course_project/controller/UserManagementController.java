@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/user/management")
+@CrossOrigin
 public class UserManagementController {
 
     private final UserBaseService userBaseService;

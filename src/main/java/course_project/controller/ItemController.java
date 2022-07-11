@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("api/item")
 @AllArgsConstructor
+@CrossOrigin
 public class ItemController {
 
     private final ItemService itemService;

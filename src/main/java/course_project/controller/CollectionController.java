@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/collections")
+@CrossOrigin
 @RequiredArgsConstructor
 public class CollectionController {
 
