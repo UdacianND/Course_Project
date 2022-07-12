@@ -16,7 +16,7 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     @Query("select t from Tag t where lower(t.name) like lower(concat('%', ?1,'%'))")
     List<Tag> getTagsByName(String name);
 
-    @Query("select t.name from Tag t order by size(t.items)")
+    @Query("select t.name from Tag t order by size(t.items) desc")
     List<String> getTopTags(Pageable pageable);
 
 }

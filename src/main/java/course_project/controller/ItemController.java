@@ -54,9 +54,11 @@ public class ItemController {
     @GetMapping("public/getItems/{page}")
     public ResponseEntity<?> getItemsByPage(
             @PathVariable Integer page,
-            @RequestBody @Nullable String searchString){
+            @RequestParam @Nullable String searchString){
         try {
-            return ResponseEntity.ok(itemService.getItemsByPage(page,searchString));
+            System.out.println(page);
+            String items = itemService.getItemsByPage(page, searchString);
+            return ResponseEntity.ok(items);
         }catch (Exception e){
             e.printStackTrace();
             return ResponseEntity.badRequest().body(null);

@@ -10,6 +10,6 @@ import java.util.List;
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
     List<Collection> findAllByUserId(Long userId);
 
-    @Query("select c from Collection c order by size(c.items)")
+    @Query("select c from Collection c order by size(c.items) desc")
     List<Collection> gelTopCollections(Pageable pageable);
 }
