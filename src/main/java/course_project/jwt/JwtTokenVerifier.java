@@ -37,7 +37,7 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String authToken = request.getHeader("Authorization");
-
+        System.out.println(authToken);
         if (authToken == null || !authToken.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -76,11 +76,10 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
 
         }catch(Exception e){
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
         }
-
-        filterChain.doFilter(request, response);
     }
 }
