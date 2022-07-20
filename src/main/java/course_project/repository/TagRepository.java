@@ -11,7 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface TagRepository extends JpaRepository<Tag, Long> {
-    Optional<Tag> findByName(String name);
+
+    Optional<Tag> findFirstByName(String name);
 
     @Query("select t from Tag t where lower(t.name) like lower(concat('%', ?1,'%'))")
     List<Tag> getTagsByName(String name);

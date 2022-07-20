@@ -71,7 +71,7 @@ public class ItemService {
 
     private Tag getTag(String name) {
         name = name.replace("#","");
-        return tagRepository.findByName(name)
+        return tagRepository.findFirstByName(name)
                 .orElse(tagRepository.save(new Tag(name)));
     }
 
