@@ -29,4 +29,11 @@ public class Comment {
     @ManyToOne()
     @JoinColumn(name="item_id")
     private Item item;
+
+    public Comment(String content, Time time, User user, Item item) {
+        this.content = content;
+        this.time = time;
+        this.user = user;
+        this.item = item;
+    }
 }

@@ -23,4 +23,8 @@ public class Topic {
     private String name;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "topic")
     private List<Collection> collections;
+
+    public Topic(String name) {
+        this.name = name;
+    }
 }

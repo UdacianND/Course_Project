@@ -21,10 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static course_project.entity.user.Role.ADMIN;
 
@@ -58,19 +57,16 @@ public class CollectionService {
     }
 
     private Topic getTopic(String name){
-        Optional<Topic> optionalTopic = topicRepository.findByName(name);
-        if(optionalTopic.isPresent())
-            return optionalTopic.get();
-        Topic newTopic = new Topic(null,name,null);
-        return topicRepository.save(newTopic);
+        return topicRepository.findByName(name)
+                .orElse(topicRepository.save(new Topic(name)));
     }
 
     private void saveFields(Collection collection, String fields) throws JsonProcessingException {
         List<CollectionFieldDto> fieldList = objectMapper.readValue(fields, new TypeReference<>() {});
-        for (CollectionFieldDto fieldDto:fieldList){
+        fieldList.forEach( fieldDto ->{
             Field field = new Field(fieldDto, collection);
             fieldRepository.save(field);
-        }
+        });
     }
 
     public User getPrincipal(){
@@ -79,17 +75,14 @@ public class CollectionService {
 
     public String getUserCollections() throws JsonProcessingException {
         Long userId = getPrincipal().getId();
-        List<Collection> collections = collectionRepository.findAllByUserId(userId);
-        List<CollectionDto> collectionDtoList = new ArrayList<>();
-        for (Collection collection: collections){
-            collectionDtoList.add(
-                    new CollectionDto(
-                            collection.getId(), userId,
-                            collection.getName(),
-                            collection.getTopic().getName(),
-                            collection.getDescription(),
-                            collection.getImageUrl()));
-        }
+        List<CollectionDto> collectionDtoList = collectionRepository.findAllByUserId(userId)
+                .stream().map(collection -> new CollectionDto(
+                                collection.getId(), userId,
+                                collection.getName(),
+                                collection.getTopic().getName(),
+                                collection.getDescription(),
+                                collection.getImageUrl()))
+                .collect(Collectors.toList());
         return objectMapper.writeValueAsString(collectionDtoList);
     }
 
@@ -98,15 +91,8 @@ public class CollectionService {
         return objectMapper.writeValueAsString(getFields(collectionId));
     }
 
-    public Collection getCollection(Long collectionId){
-        Optional<Collection> optionalCollection = collectionRepository.findById(collectionId);
-        if(optionalCollection.isEmpty())
-            throw new NullPointerException();
-        return optionalCollection.get();
-    }
-
     public Collection authorize(Long collectionId){
-        Collection collection = getCollection(collectionId);
+        Collection collection = collectionRepository.findById(collectionId).orElseThrow();
         User principal = getPrincipal();
         boolean isAuthorized = Objects.equals(collection.getUser().getId(), principal.getId())
                 || principal.getRole() == ADMIN;
@@ -116,19 +102,15 @@ public class CollectionService {
     }
 
     private List<FieldDto> getFields(Long collectionId){
-        List<Field> fields = fieldRepository.findAllByCollection_Id(collectionId);
-        List<FieldDto> fieldDtoList = new ArrayList<>();
-        for (Field field : fields){
-            fieldDtoList.add( new FieldDto(
-                    field.getId(),
-                    field.getName(),
-                    field.getType().toString().toLowerCase(), ""));
-        }
-        return fieldDtoList;
+        return fieldRepository.findAllByCollection_Id(collectionId)
+                .stream().map(field ->  new FieldDto(
+                        field.getId(),
+                        field.getName(),
+                        field.getType())).collect(Collectors.toList());
     }
 
     public String getCollectionInfo(Long collectionId) throws JsonProcessingException {
-        Collection collection = getCollection(collectionId);
+        Collection collection = collectionRepository.findById(collectionId).orElseThrow();
         CollectionDto collectionDto = getCollectionDto(collection);
         return objectMapper.writeValueAsString(collectionDto);
     }
@@ -144,11 +126,9 @@ public class CollectionService {
     }
 
     public String getTopics(String name) throws JsonProcessingException {
-        List<Topic> topics = topicRepository.getTopicsByName(name);
-        List<String> topicNames = new ArrayList<>();
-        for (Topic topic: topics) {
-            topicNames.add(topic.getName());
-        }
+        List<String> topicNames = topicRepository.getTopicsByName(name)
+                .stream().map(Topic::getName)
+                .collect(Collectors.toList());
         return objectMapper.writeValueAsString(topicNames);
     }
 
@@ -171,10 +151,9 @@ public class CollectionService {
 
     public String topCollections() throws JsonProcessingException {
         Pageable limit = PageRequest.of(0, 5);
-        List<Collection> collections = collectionRepository.gelTopCollections(limit);
-        List<CollectionDto> collectionDtoList = new ArrayList<>();
-        for(Collection collection : collections)
-            collectionDtoList.add(getCollectionDto(collection));
+        List<CollectionDto> collectionDtoList = collectionRepository.gelTopCollections(limit)
+                .stream().map(this::getCollectionDto)
+                .collect(Collectors.toList());
         return objectMapper.writeValueAsString(collectionDtoList);
     }
 }

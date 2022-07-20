@@ -27,4 +27,8 @@ public class Tag {
     private String name;
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "tags")
     List<Item> items;
+
+    public Tag(String name) {
+        this.name = name;
+    }
 }

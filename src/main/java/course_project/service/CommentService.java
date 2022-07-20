@@ -19,6 +19,7 @@ import java.sql.Time;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -34,7 +35,6 @@ public class CommentService {
                 .orElseThrow(() -> new ObjectNotFoundException(id, "Item"));
         User principal = getPrincipal();
         Comment comment = new Comment(
-                null,
                 content,
                 Time.valueOf(LocalTime.now()),
                 principal,
@@ -50,11 +50,11 @@ public class CommentService {
     }
 
     public String getComments(Long id) throws JsonProcessingException {
-        List<Comment> comments = commentRepository.findAllByItem_Id(id);
-        List<CommentDto> commentDtoList = new ArrayList<>();
-        for (Comment comment : comments){
-            commentDtoList.add(new CommentDto(comment.getUser().getUsername(), comment.getContent()));
-        }
+        List<CommentDto> commentDtoList = commentRepository.findAllByItem_Id(id).stream()
+                .map(comment-> new CommentDto(
+                        comment.getUser().getUsername(),
+                        comment.getContent()))
+                .collect(Collectors.toList());
         return objectMapper.writeValueAsString(commentDtoList);
     }
 }

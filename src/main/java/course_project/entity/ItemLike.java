@@ -23,4 +23,9 @@ public class ItemLike {
     private User user;
     @ManyToOne
     private Item item;
+
+    public ItemLike(User user, Item item) {
+        this.user = user;
+        this.item = item;
+    }
 }

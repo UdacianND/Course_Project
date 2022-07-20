@@ -28,10 +28,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static course_project.entity.user.Role.ADMIN;
 
@@ -67,59 +65,39 @@ public class ItemService {
 
     private List<Tag> getTags(String tags){
         String[] tagArray = tags.split(" ");
-        List<Tag> tagList = new ArrayList<>();
-        for (String tag:tagArray) {
-            tagList.add(getTag(tag));
-        }
-        return tagList;
+        return Arrays.stream(tagArray).map(this::getTag)
+                .collect(Collectors.toList());
     }
 
     private Tag getTag(String name) {
         name = name.replace("#","");
-        Optional<Tag> optionalTag = tagRepository.findByName(name);
-        if (optionalTag.isPresent())
-            return optionalTag.get();
-        Tag tag = new Tag(null,name,null);
-        return tagRepository.save(tag);
+        return tagRepository.findByName(name)
+                .orElse(tagRepository.save(new Tag(name)));
     }
 
     public String getTagsByName(String name) throws JsonProcessingException {
-        List<Tag> tags = tagRepository.getTagsByName(name);
-        List<String> tagList = new ArrayList<>();
-        for (Tag tag:tags)
-            tagList.add(tag.getName());
+        List<String> tagList = tagRepository.getTagsByName(name).stream()
+                .map(Tag::getName).collect(Collectors.toList());
         return objectMapper.writeValueAsString(tagList);
     }
 
     private List<Value> getValues(Item item, String values) throws JsonProcessingException {
         List<ValueDto> valueDtoList =  objectMapper.readValue(values, new TypeReference<>() {});
-        List<Value> valueList = new ArrayList<>();
-        for (ValueDto valueDto: valueDtoList){
-            Value value = new Value(null, item,getField(valueDto.getId()),valueDto.getValue());
-            valueList.add(valueRepository.save(value));
-        }
-        return valueList;
+        return valueDtoList.stream().map(valueDto-> {
+                    Field field = fieldRepository.findById(valueDto.getId()).orElseThrow();
+                    return valueRepository.save(
+                        new Value(item, field, valueDto.getValue()));
+                }).collect(Collectors.toList());
     }
 
-    private Field getField(Long id){
-        Optional<Field> field = fieldRepository.findById(id);
-        if(field.isEmpty())
-            throw new NullPointerException("Field not found");
-        return field.get();
-    }
 
     public String getItemsByCollection(Long collectionId) throws JsonProcessingException {
-        List<Item> items = itemRepository.findAllByCollection_Id(collectionId);
-        return convertItemsToString(items);
-    }
-
-    public String convertItemsToString(List<Item> items) throws JsonProcessingException {
-        List<ItemDto> itemDtoList = new ArrayList<>();
-        for (Item item:items){
-            itemDtoList.add(getItemDto(item));
-        }
+        List<ItemDto> itemDtoList = itemRepository.findAllByCollection_Id(collectionId)
+                .stream().map(this::getItemDto)
+                .collect(Collectors.toList());
         return objectMapper.writeValueAsString(itemDtoList);
     }
+
 
     public ItemDto getItemDto(Item item){
         return new ItemDto(
@@ -153,14 +131,13 @@ public class ItemService {
     }
 
     public List<ValueDto> getValueDtoList(List<Value> values) {
-        List<ValueDto> valueDtoList = new ArrayList<>();
-        for(Value value:values){
-            Field field = value.getField();
-            valueDtoList.add(new ValueDto(
-                    value.getId(),field.getName(),
-                    field.getType().toString().toLowerCase(),value.getValue()));
-        }
-        return valueDtoList;
+        return values.stream().map(value ->{
+                Field field = value.getField();
+                return new ValueDto(
+                        value.getId(),field.getName(),
+                        field.getType().toString().toLowerCase(),
+                        value.getValue());})
+                .collect(Collectors.toList());
     }
 
 
@@ -189,26 +166,20 @@ public class ItemService {
 
     private List<Value> editValues(String values) throws JsonProcessingException {
         List<ValueDto> valueDtoList =  objectMapper.readValue(values, new TypeReference<>() {});
-        List<Value> valueList = new ArrayList<>();
-        for (ValueDto valueDto: valueDtoList){
-            Value value = valueRepository.findById(valueDto.getId()).orElseThrow(() -> new ObjectNotFoundException(null,"Item"));
+        return valueDtoList.stream().map(valueDto->{
+            Value value = valueRepository.findById(valueDto.getId()).orElseThrow();
             value.setValue(valueDto.getValue());
-            valueList.add(valueRepository.save(value));
-        }
-        return valueList;
+            return valueRepository.save(value);
+        }).collect(Collectors.toList());
     }
 
     public void like(Long id) {
         User principal = collectionService.getPrincipal();
         Item item = itemRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException(id,"Item"));
-        Optional<ItemLike> optionalItemLike = itemLikeRepository.findByItem_IdAndUser_Id(item.getId(), principal.getId());
-        if(optionalItemLike.isEmpty()){
-            ItemLike itemLike = new ItemLike(null, principal, item);
-            itemLikeRepository.save(itemLike);
-        }else{
-            ItemLike itemLike = optionalItemLike.get();
-            itemLikeRepository.deleteById(itemLike.getId());
-        }
+        itemLikeRepository.findByItem_IdAndUser_Id(item.getId(), principal.getId())
+                .ifPresentOrElse(itemLikeRepository::delete, ()-> {
+                            ItemLike itemLike = new ItemLike( principal, item);
+                            itemLikeRepository.save(itemLike); });
     }
 
     public User getPrincipal(){
@@ -234,8 +205,8 @@ public class ItemService {
 
     public void deleteCollection(Long id) {
         Collection collection = collectionService.authorize(id);
-        List<Item> items = itemRepository.findAllByCollection_Id(id);
-        for(Item item : items) deleteItem(item);
+        itemRepository.findAllByCollection_Id(id)
+                .forEach(this::deleteItem);
         collectionService.deleteCollection(collection);
     }
 
@@ -268,26 +239,16 @@ public class ItemService {
 
     public ItemsPage searchItems(Integer page, String searchString){
         SearchSession searchSession = Search.session( entityManager );
-        int offset = page*6;
         SearchResult<Item> result = searchSession.search( Item.class )
                 .where( f -> f.match()
                         .fields( "name", "tags.name" ,"comments.content","values.value","collection.name")
-                        .matching( searchString ) )
-                .fetch( offset, 6 );
-
-        long totalHitCount = result.total().hitCount();
+                        .matching( searchString )).fetch( page*6, 6 );
         List<Item> items = result.hits();
-        boolean hasNext = (offset + 6) < totalHitCount;
-        return new ItemsPage(getItemDtoList(items), hasNext);
+        boolean hasNext = (page*6 + 6) < result.total().hitCount();
+        List<ItemDto> itemDtoList = items.stream().map(this::getItemDto).collect(Collectors.toList());
+        return new ItemsPage(itemDtoList, hasNext);
     }
 
-    List<ItemDto> getItemDtoList(List<Item> items){
-        List<ItemDto> itemDtoList = new ArrayList<>();
-        for(Item item:items){
-            itemDtoList.add(getItemDto(item));
-        }
-        return itemDtoList;
-    }
 
     public String getTopTags() throws JsonProcessingException {
         Pageable limit = PageRequest.of(0, 6);

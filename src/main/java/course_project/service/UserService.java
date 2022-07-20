@@ -17,8 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static course_project.entity.user.Role.USER;
 import static course_project.entity.user.UserStatus.*;
@@ -36,15 +36,13 @@ public class UserService implements UserBaseService {
 
     @Override
     public String getUserList() throws JsonProcessingException {
-        List<User> userList = userRepository.getUserList();
-        List<UserDto> userDtoList = new ArrayList<>();
-        for (User user: userList){
-            userDtoList.add(new UserDto(
-                            user.getId(),
-                            user.getUsername(),
-                            user.getEmail(),
-                            user.getStatus(),
-                            user.getRole().name()));}
+        List<UserDto> userDtoList = userRepository.getUserList().stream()
+                .map(user-> new UserDto(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getStatus(),
+                        user.getRole().name())).collect(Collectors.toList());
         return objectMapper.writeValueAsString(userDtoList);
     }
 

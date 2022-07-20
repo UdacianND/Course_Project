@@ -27,4 +27,10 @@ public class Value {
     private Field field;
     @FullTextField(analyzer = "customAnalyzer")
     private String value;
+
+    public Value(Item item, Field field, String value) {
+        this.item = item;
+        this.field = field;
+        this.value = value;
+    }
 }
