@@ -69,10 +69,10 @@ public class ItemService {
                 .collect(Collectors.toList());
     }
 
-    private Tag getTag(String name) {
-        name = name.replace("#","");
-        return tagRepository.findFirstByName(name)
-                .orElse(tagRepository.save(new Tag(name)));
+    private Tag getTag(String tag) {
+        String tagName = tag.replace("#","");
+        return tagRepository.findFirstByName(tagName)
+                .orElseGet(()->tagRepository.save(new Tag(tagName)));
     }
 
     public String getTagsByName(String name) throws JsonProcessingException {
